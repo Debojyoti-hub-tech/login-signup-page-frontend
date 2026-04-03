@@ -1,0 +1,37 @@
+# Requirements for local setup
+Node >= 18.0.0
+npm >= 9.0.0
+
+# Runtime dependencies (from package.json)
+next@13.4.10
+react@18.2.0
+react-dom@18.2.0
+three@0.159.0
+framer-motion@10.12.4
+@react-three/fiber@8.13.1
+lucide-react@0.276.0
+
+# Dev dependencies
+typescript@5.2.2
+tailwindcss@3.4.7
+postcss@8.4.27
+autoprefixer@10.4.14
+@types/react@18.2.21
+@types/node@20.5.1
+
+# Quick setup
+1. Install Node.js (v18+) and npm.
+2. From the project root run:
+
+   npm install
+
+3. Start the dev server:
+
+   npm run dev
+
+4. Optional: initialize shadcn UI generator:
+
+   npx shadcn@latest init
+
+---
+This file lists the environment and package versions used by this project. The canonical dependency list is in `package.json`; run `npm install` to install exact packages listed there.
