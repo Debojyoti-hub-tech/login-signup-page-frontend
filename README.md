@@ -1,4 +1,4 @@
-# triials — Minimal Next.js + TypeScript + Tailwind scaffold
+# Minimal Next.js + TypeScript + Tailwind scaffold
 
 This workspace contains a minimal Next.js + TypeScript + Tailwind project and the included Sign Up / Log In UI demo.
 
