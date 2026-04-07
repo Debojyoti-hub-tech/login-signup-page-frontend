@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "63362719-aca8-461c-b069-34203e02b2f0",
+    "email": "trex0976io@gmail.com",
+    "firstName": "Ashoka",
+    "lastName": "Sen",
+    "passwordHash": "$2a$10$1H4/BFUhEYry4h./SnwVI.IF06WqcUN4DNqtoMj4rJC2NW18e03kK",
+    "createdAt": "2026-04-07T16:38:38.551Z"
+  },
+  {
+    "id": "2d7acabb-3b68-4d51-8bf3-d585a32ceb6a",
+    "email": "trex09765io@gmail.com",
+    "firstName": "Ashoka",
+    "lastName": "Sen",
+    "passwordHash": "$2a$10$QdITZc/rEajB.CMZ2VthRetMRmHPvKMHzD6X6vJZVAPV2smC7lr8S",
+    "createdAt": "2026-04-07T16:40:59.328Z"
+  }
+]

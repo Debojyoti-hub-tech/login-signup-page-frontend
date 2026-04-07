@@ -49,23 +49,25 @@ export async function findUserById(id: string) {
 export async function createUser({
   email,
   password,
+  passwordHash,
   firstName,
   lastName,
 }: {
   email: string;
-  password: string;
+  password?: string;
+  passwordHash?: string;
   firstName?: string;
   lastName?: string;
 }) {
   const existing = await findUserByEmail(email);
   if (existing) throw new Error('User already exists');
-  const passwordHash = await bcrypt.hash(password, 10);
+  const finalPasswordHash = passwordHash ? passwordHash : await bcrypt.hash(password || '', 10);
   const user: User = {
     id: randomUUID(),
     email,
     firstName,
     lastName,
-    passwordHash,
+    passwordHash: finalPasswordHash,
     createdAt: new Date().toISOString(),
   };
   const users = await readUsers();

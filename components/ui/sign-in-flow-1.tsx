@@ -520,16 +520,28 @@ export const SignInPage = ({ className }: SignInPageProps) => {
     }
 
     try {
-      const url = mode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
-      const payload: any = { email, password };
       if (mode === 'signup') {
-        payload.firstName = firstName;
-        payload.lastName = lastName;
+        // request OTP for signup
+        const res = await fetch('/api/auth/request-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, firstName, lastName, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data?.error || 'Failed to send verification code');
+          return;
+        }
+        // advance to code verification step
+        setStep('code');
+        return;
       }
-      const res = await fetch(url, {
+
+      // login path
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
       const data = await res.json();
@@ -542,6 +554,40 @@ export const SignInPage = ({ className }: SignInPageProps) => {
     } catch (err) {
       console.error(err);
       alert('Network error');
+    }
+  };
+
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const verifyOtp = async () => {
+    if (!code.every(d => d !== "")) return;
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: code.join('') }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data?.error || 'Invalid code');
+        setOtpLoading(false);
+        return;
+      }
+      setReverseCanvasVisible(true);
+      setTimeout(() => {
+        setInitialCanvasVisible(false);
+      }, 50);
+      setTimeout(() => {
+        setStep('success');
+        setOtpLoading(false);
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+      setOtpLoading(false);
     }
   };
 
@@ -566,13 +612,18 @@ export const SignInPage = ({ className }: SignInPageProps) => {
       if (index === 5 && value) {
         const isComplete = newCode.every(digit => digit.length === 1);
         if (isComplete) {
-          setReverseCanvasVisible(true);
-          setTimeout(() => {
-            setInitialCanvasVisible(false);
-          }, 50);
-          setTimeout(() => {
-            setStep("success");
-          }, 2000);
+          // for signup, verify OTP; for other flows, keep existing behavior
+          if (mode === 'signup') {
+            verifyOtp();
+          } else {
+            setReverseCanvasVisible(true);
+            setTimeout(() => {
+              setInitialCanvasVisible(false);
+            }, 50);
+            setTimeout(() => {
+              setStep("success");
+            }, 2000);
+          }
         }
       }
     }
@@ -787,11 +838,33 @@ export const SignInPage = ({ className }: SignInPageProps) => {
                     
                     <div>
                       <motion.p 
+                        onClick={async () => {
+                          if (resendLoading) return;
+                          setResendLoading(true);
+                          try {
+                            const res = await fetch('/api/auth/request-otp', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ email, firstName, lastName, password }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) {
+                              alert(data?.error || 'Failed to resend code');
+                            } else if (data?.debug?.code) {
+                              // show code in dev mode
+                              alert('Debug OTP: ' + data.debug.code);
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            alert('Network error');
+                          }
+                          setResendLoading(false);
+                        }}
                         className="text-white/50 hover:text-white/70 transition-colors cursor-pointer text-sm"
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                       >
-                        Resend code
+                        {resendLoading ? 'Resending…' : 'Resend code'}
                       </motion.p>
                     </div>
                     
@@ -806,14 +879,15 @@ export const SignInPage = ({ className }: SignInPageProps) => {
                         Back
                       </motion.button>
                       <motion.button 
+                        onClick={() => verifyOtp()}
                         className={`flex-1 rounded-full font-medium py-3 border transition-all duration-300 ${
-                          code.every(d => d !== "") 
+                          code.every(d => d !== "") && !otpLoading
                           ? "bg-white text-black border-transparent hover:bg-white/90 cursor-pointer" 
                           : "bg-[#111] text-white/50 border-white/10 cursor-not-allowed"
                         }`}
-                        disabled={!code.every(d => d !== "")}
+                        disabled={!code.every(d => d !== "") || otpLoading}
                       >
-                        Continue
+                        {otpLoading ? 'Verifying…' : 'Continue'}
                       </motion.button>
                     </div>
                     
