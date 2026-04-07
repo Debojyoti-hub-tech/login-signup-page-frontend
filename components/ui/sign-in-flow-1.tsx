@@ -505,7 +505,7 @@ export const SignInPage = ({ className }: SignInPageProps) => {
   const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
   const [reverseCanvasVisible, setReverseCanvasVisible] = useState(false);
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Basic client-side validation depends on current mode
     if (mode === 'signup') {
@@ -516,11 +516,33 @@ export const SignInPage = ({ className }: SignInPageProps) => {
         if (!password) { (document.getElementById('password') as HTMLInputElement | null)?.focus(); return; }
       }
     } else {
-      if (!email.trim()) { (document.getElementById('email') as HTMLInputElement | null)?.focus(); return; }
+      if (!email.trim() || !password) { (document.getElementById('password') as HTMLInputElement | null)?.focus(); return; }
     }
 
-    // Proceed to OTP step (simulate sending OTP)
-    setStep("code");
+    try {
+      const url = mode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+      const payload: any = { email, password };
+      if (mode === 'signup') {
+        payload.firstName = firstName;
+        payload.lastName = lastName;
+      }
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data?.error || 'Authentication failed');
+        return;
+      }
+      setShowSuccessAnimation(true);
+      setStep('success');
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    }
   };
 
   useEffect(() => {
@@ -689,27 +711,25 @@ export const SignInPage = ({ className }: SignInPageProps) => {
                             )}
                           </div>
 
-                          {mode === 'signup' && (
-                            <>
-                              <input
-                                id="password"
-                                type="password"
-                                placeholder="Create password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                aria-label="Password"
-                                className="w-full self-stretch box-border h-12 bg-transparent text-white/60 placeholder:text-white/50 border border-white/20 rounded-full px-4 focus:outline-none focus:border-white/20 text-center transition-colors appearance-none"
-                                required
-                              />
+                          <>
+                            <input
+                              id="password"
+                              type="password"
+                              placeholder={mode === 'signup' ? 'Create password' : 'Your password'}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              aria-label="Password"
+                              className="w-full self-stretch box-border h-12 bg-transparent text-white/60 placeholder:text-white/50 border border-white/20 rounded-full px-4 focus:outline-none focus:border-white/20 text-center transition-colors appearance-none"
+                              required
+                            />
 
-                              <button
-                                type="submit"
-                                className="w-full rounded-full bg-white text-black font-medium py-3 hover:bg-white/90 transition-colors"
-                              >
-                                {mode === 'login' ? 'LogIn' : 'Sign up'}
-                              </button>
-                            </>
-                          )}
+                            <button
+                              type="submit"
+                              className="w-full rounded-full bg-white text-black font-medium py-3 hover:bg-white/90 transition-colors"
+                            >
+                              {mode === 'login' ? 'Log in' : 'Sign up'}
+                            </button>
+                          </>
                         </div>
                       </form>
                     </div>
